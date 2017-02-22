@@ -36,8 +36,8 @@ https://github.com/chenshuo/recipes/blob/master/protobuf/codec.h
 /*
 struct ProtobufTransportFormat __attribute__ ((__packed__))
 {
-	int32_t  len;
-	int16_t  flag; 
+    int32_t  len;
+    int16_t  flag; 
     int16_t  nameLen;
     char     typeName[nameLen];
     char     protobufData[len - nameLen - 8];
