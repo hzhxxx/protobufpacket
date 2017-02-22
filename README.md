@@ -1,15 +1,15 @@
 # protobufpacket
 protobuf c++ 2011 packet
 
-struct ProtobufTransportFormat __attribute__ ((__packed__))
-{
-	int32_t  len;
-	int16_t  flag; 
-    int16_t  nameLen;
-    char     typeName[nameLen];
-    char     protobufData[len - nameLen - 8];
-    int32_t  checkSum;
-}
+    struct ProtobufTransportFormat __attribute__ ((__packed__))
+    {    
+	    int32_t  len;
+	    int16_t  flag; 
+	    int16_t  nameLen;
+	    char     typeName[nameLen];
+	    char     protobufData[len - nameLen - 8];
+	    int32_t  checkSum;
+    }
 
 1. flag 
 从最低位开始,
