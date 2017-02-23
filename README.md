@@ -1,6 +1,9 @@
 # protobufpacket
 protobuf c++ 2011 packet
 
+鉴于通过 protobuf 序列化的数据没有数据包头，不便于通过网络发送并识
+别，故制定本规则。
+
     struct ProtobufTransportFormat __attribute__ ((__packed__))
     {    
 	    int32_t  len;
@@ -27,3 +30,4 @@ typeName+protobufData
 4. protobufData长度
 (len - nameLen - 8)等于下面表达式
 (len - NameLen - sizeof(Flag) - sizeof(NameLen) - sizeof(CheckSum))
+装载  protobuf 数据（类)通过序列化后的的实例。
