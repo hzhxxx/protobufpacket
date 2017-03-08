@@ -23,12 +23,11 @@
 #include <arpa/inet.h>  // htonl, ntohl
 #include <stdint.h>
 
-
 using namespace std::placeholders;
 using namespace google;
 using namespace std;
 
-//g++ -g proto.cpp addressbook.pb.cc -lprotobuf -lz -std=gnu++11 -o proto -Wl,-rpath,/usr/local/lib -I/usr/local/include/
+//g++ -g proto.cpp  addressbook.pb.cc -lprotobuf -lz -std=gnu++11 -o proto -Wl,-rpath,/usr/local/lib -I/usr/local/include/
 /*
 zlib库
 yum install zlib-devel
@@ -148,8 +147,7 @@ inline const std::string CProtobufPacket::encode(
 	{
 		protobuf::util::JsonOptions options;
 		//options.add_whitespace = true;		
-		success = MessageToJsonString(message, &json_message_, options).ok();
-		//std::cout<<"json:"<<json_message_<<endl;
+		success = MessageToJsonString(message, &json_message_, options).ok();		
 		if(flag_.test(PROTO_ZIP_INDXE))
 		{
 			uint64_t ziplen = compressBound(json_message_.size());			
@@ -168,8 +166,6 @@ inline const std::string CProtobufPacket::encode(
 		else
 		{
 			result.append(json_message_);
-			//std::cout<<"11 result json:"<<endl;
-			//std::cout<<result<<endl;
 		}
 	}
 	else
@@ -409,24 +405,25 @@ inline const std::string CJsonPacket::encode(const protobuf::Message& message)
 
 inline protobuf::Message* CJsonPacket::decode(const std::string& json)
 {
-	std::string buff = "";
-	
-	int32_t be32 = 0;	
 	size_t start = 0;
-	be32 = htonl(std::stoi(get_value(json,LENGTH,start),nullptr,0));
+	int32_t be32 = 0,namelen = 0;
+	be32 = std::stoi(get_value(json,LENGTH,start),nullptr,0);
+	std::string buff = "";
+	buff.resize(be32 + sizeof(int32_t));
+	buff.clear();
+	be32 = htonl(be32);
 	buff.append(reinterpret_cast<char*>(&be32),sizeof(int32_t));
 
 	be32 = htons(std::stoi(get_value(json,FLAG,start),nullptr,0));
 	buff.append(reinterpret_cast<char*>(&be32),sizeof(int16_t));
 
-	int32_t namelen = std::stoi(get_value(json,NAMELEN,start),nullptr,0);
+	namelen = std::stoi(get_value(json,NAMELEN,start),nullptr,0);
 	be32 = htons(namelen);
 	buff.append(reinterpret_cast<char*>(&be32),sizeof(int16_t));
 	
-	std::string s = get_value(json,TYPENAME,start);
-	assert(s.size() > 2);
-	s = s.substr(1,s.size() - 2);	
-	buff.append(s.c_str(), namelen);
+	const std::string &s = get_value(json,TYPENAME,start);
+	assert(s.size() > 2);	
+	buff.append(s.substr(1,s.size() - 2).c_str(), namelen);
 
 	start = json.find(PB_DATA,start);
 	size_t end = json.rfind(CHECKSUM);
@@ -442,7 +439,7 @@ inline protobuf::Message* CJsonPacket::decode(const std::string& json)
 	end = json.rfind("}");
 	if(end != std::string::npos)
 	{
-		s = json.substr(start,end - start);		
+		const std::string &s = json.substr(start,end - start);		
 		be32 = htonl(std::stoi(s,nullptr,0));
 		buff.append(reinterpret_cast<char*>(&be32),sizeof(int32_t));
 	}
@@ -469,12 +466,15 @@ inline const std::string CJsonPacket::get_value(
 	return "";
 }
 
+//以下部分为测试代码
+
 void addPerson(tutorial::AddressBook &address_book)
 {
 	tutorial::Person* person = address_book.add_people();
-	assert(person);	
-	person->set_id(100);
-	*person->mutable_name() = "huang黄志辉";
+	assert(person);
+	static int32_t id = 100;	
+	person->set_id(id++);
+	*person->mutable_name() = "huang马克黄";
 	person->set_email("888888@qq.com");
 	//
 	tutorial::Person::PhoneNumber* phone_number = person->add_phones();
@@ -504,7 +504,7 @@ void print_(const tutorial::AddressBook *book)
 }
 
 int main(int argc,char * argv[])
-{	
+{
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	
 	tutorial::AddressBook address_book;
@@ -521,7 +521,7 @@ int main(int argc,char * argv[])
 	std::string buf = packet.encode(address_book);
 
 	//std::cout<<"buf"<<buf<<endl;
-	buf.append("dafdfdsa");
+	buf.append("附加测试,判定只解析需要的数据");
 	tutorial::AddressBook *book = dynamic_cast<tutorial::AddressBook*>(packet.decode(buf));  
 	print_(book);
 
