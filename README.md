@@ -31,3 +31,6 @@ typeName+protobufData
 (len - nameLen - 8)等于下面表达式
 (len - NameLen - sizeof(Flag) - sizeof(NameLen) - sizeof(CheckSum))
 装载  protobuf 数据（类)通过序列化后的的实例。
+
+5. JsonPacketHead 结构,用于支持 http(https)+json 格式,包头采用http和https协议封装,
+文件jsonpackethead.proto用于定义数据头,便于兼容TCP格式数据

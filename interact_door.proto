@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package door;
+
+option java_package = "com.weilin.door";
+option java_outer_classname = "DoorProtocol";
+option csharp_namespace = "Weilin.Protobuf.Door";
+
+/*
+服务器端请求打开门
+S->Door
+*/
+message OpenDoorReq
+{    
+	string PassWord = 1;
+	string DoorID=2;
+}
+
+message OpenDoorResp
+{
+	int32 Result = 1;
+    string ErrMsg =2;
+}
+
+
+/*
+用于门端主动发起的升级请求
+Door->S
+*/
+message UpgradeReq
+{
+	string AppName = 1;
+	int32 Version = 2;	
+}
+
+message UpgradeResp
+{
+	int32 Result = 1;
+    string ErrMsg=2;
+    string Describe= 3;
+	string Url = 4;
+    int32 Type=5;
+    string checksum=6;
+}
+
+/*
+用于门端定期拉取动态密码
+Door->S
+*/
+message UpdateDynamicPWReq
+{
+    string DoorID=1;
+}
+
+message UpdateDynamicPWResp
+{
+	int32 Result=1;
+    string ErrMsg=2;
+	repeated string PassWords=3;
+	repeated int32 Time=4;
+}
+
+
+/*
+用于门端主动建立TCP长连接的校验
+Door->S
+*/
+message ConnectReq
+{
+    string DoorID=1;
+}
+
+message ConnectReqResp
+{
+	int32 Result=1;
+    string ErrMsg=2;
+}
+
+

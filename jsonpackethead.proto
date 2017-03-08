@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package jsonpacket;
+
+option java_package = "com.json.packet";
+option java_outer_classname = "ProtobufJsonPacket";
+option csharp_namespace = "Weilin.Protobuf.JsonPacket";
+
+message JsonPacketHead
+{
+	int32 Length=1;
+	int32 Flag=2;
+	int32 NameLength=3;
+	string TypeName=4;
+	string ProtocolbufData=5;
+	int32 CheckSum=6;
+}
+
+
+ print check_sum_
+$1 = -1967303650
+
+(gdb) print checkSum
+$2 = 508870026
+
+	const std::string LENGTH = "\"Length\":";
+	const std::string FLAG = "\"Flag\":";
+	const std::string NAMELEN = "\"NameLen\":";
+	const std::string TYPENAME = "\"TypeName\":";
+	const std::string PB_DATA = "\"PB_Data\":";
+	const std::string CHECKSUM = "\"CheckSum\":";
+	
+tutorial.AddressBook
+
+len:311,922812416
+flag:2,512
+namelen:21,5376
+name:tutorial.AddressBook
+checkSum:-2121440958,1113689473
+
+
+"\000\000\001\067\000\002\000\025tutorial.AddressBook\"{\"people\":[{\"name\":\"huang黄志辉\",\"id\":100,\"email\":\"888888@qq.com\",\"phones\":[{\"number\":\"18912345678\"},{\"number\":\"075512345678\",\"type\":\"WORK\"}]},{\"name\":\"huang黄志辉\",\"id\":100,\"email\":\"888888@qq.com\",\"phones\":[{\"number\":\"18912345678\"},{\"number\":\"075512345678\",\"type\":\"WORK\"}]}]}\201\215aB"
+"\000\000\001\067\000\002\000\025tutorial.AddressBook\000{\"people\":[{\"name\":\"huang黄志辉\",\"id\":100,\"email\":\"888888@qq.com\",\"phones\":[{\"number\":\"18912345678\"},{\"number\":\"075512345678\",\"type\":\"WORK\"}]},{\"name\":\"huang黄志辉\",\"id\":100,\"email\":\"888888@qq.com\",\"phones\":[{\"number\":\"18912345678\"},{\"number\":\"075512345678\",\"type\":\"WORK\"}]}]}\201\215aB"

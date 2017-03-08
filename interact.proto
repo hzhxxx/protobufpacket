@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package app;
+
+option java_package = "com.weilin.App";
+option java_outer_classname = "AppProtos";
+option csharp_namespace = "Weilin.Protobuf.App";
+
+message CMsgResp
+{
+	string UserId = 1;
+	int32 Result = 2;
+	string MsgAck = 3;
+}
+
+message CMsgReq
+{
+	string UserId = 1;
+	string MsgContent = 2;
+}
+
+message CLoginResp
+{
+	int32 LoginResult = 1;
+	string LoginMsg = 2;
+}
+
+message CLoginReq
+{
+	string UserId = 1;
+	string PassWord = 2;
+}
+
+message CRegiResp
+{
+	int32 RegisterResult = 1;
+	string RegisterMsg = 2;
+}
+
+message CRegiReq
+{
+	string UserId = 1;
+	string PassWord = 2;
+}
+
+message CProtoMsg
+{
+	int32 MsgType = 1;
+	CRegiReq RegiReq = 2;
+	CRegiResp RegiResp = 3;
+	CLoginReq LoginReq = 4;
+	CLoginResp LoginResp = 5;
+	CMsgReq MsgReq = 6;
+	CMsgResp MsgResp = 7;
+}
