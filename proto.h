@@ -1,6 +1,5 @@
 
 
-//g++ -g proto.cpp  addressbook.pb.cc -lprotobuf -lz -std=gnu++11 -o proto -Wl,-rpath,/usr/local/lib -I/usr/local/include/
 /*
 zlib库
 yum install zlib-devel
@@ -41,32 +40,36 @@ typeName+protobufData
 #ifndef PROTO_CPROTOBUF_JSON_Packet_2eproto__INCLUDED
 #define PROTO_CPROTOBUF_JSON_Packet_2eproto__INCLUDED
 
-#include <zlib.h>  // adler32,crc32
 #include <string>
 #include <bitset>
 #include <algorithm>
-using namespace std::placeholders;
-using namespace google;
+namespace google{
+	namespace protobuf{
+		class Message;		
+	}  
+}
+using google::protobuf::Message;
 using namespace std;
+
 
 //用于支持 TCP 流格式的数据包解析
 class CProtobufPacket final
 {
 public:	
-	inline const std::string encode(const protobuf::Message& message);
-	inline protobuf::Message* decode(const std::string& buf);	
-	inline void set_proto_checksum_algorithm(bool adler32);
-	inline void set_proto_format(bool json);
-	inline void set_proto_zip(bool zip);
-	inline bool get_proto_checksum_algorithm();
-	inline bool get_proto_format();
-	inline bool get_proto_zip();
-	inline int32_t get_packet_length();
-	inline int16_t get_packet_flag();
-	inline const std::string get_packet_typeName();
-	inline int16_t get_packet_typeName_length();
-	inline const std::string get_json_message();
-	inline int32_t get_check_sum();
+	 const std::string encode(const Message& message);
+	 Message* decode(const std::string& buf);	
+	 void set_proto_checksum_algorithm(bool adler32);
+	 void set_proto_format(bool json);
+	 void set_proto_zip(bool zip);
+	 bool get_proto_checksum_algorithm();
+	 bool get_proto_format();
+	 bool get_proto_zip();
+	 int32_t get_packet_length();
+	 int16_t get_packet_flag();
+	 const std::string get_packet_typeName();
+	 int16_t get_packet_typeName_length();
+	 const std::string get_json_message();
+	 int32_t get_check_sum();
 private:	
 	const int32_t HEAD_LEN = sizeof(int32_t);
 	const int16_t FLAG_LEN = sizeof(int16_t);
@@ -81,11 +84,10 @@ private:
 	int32_t check_sum_ = 0;
 	std::string typeName_ = "";
 	std::string json_message_ = "";
-	std::bitset<16> flag_ = 0;	
-	std::function<size_t (size_t,const Bytef*,size_t)> checksum_f = std::bind(::adler32,_1,_2,_3);
-	protobuf::Message* createMessage(const std::string& type_name);
-	inline int32_t asInt32(const char* buf);
-	inline int16_t asInt16(const char* buf);
+	std::bitset<16> flag_ = 0;		
+	Message* createMessage(const std::string& type_name);
+	int32_t asInt32(const char* buf);
+	int16_t asInt16(const char* buf);
 	bool unzip(std::string &json);
 };
 
@@ -93,8 +95,8 @@ private:
 class CJsonPacket final
 {
 public:	
-	inline const std::string encode(const protobuf::Message& message);	
-	inline protobuf::Message* decode(const std::string& json);
+	 const std::string encode(const Message& message);	
+	 Message* decode(const std::string& json);
 private:
 	const std::string LENGTH = "\"Length\":";
 	const std::string FLAG = "\"Flag\":";
@@ -102,7 +104,7 @@ private:
 	const std::string TYPENAME = "\"TypeName\":";
 	const std::string PB_DATA = "\"PB_Data\":";
 	const std::string CHECKSUM = "\"CheckSum\":";
-	inline const std::string get_value(
+	 const std::string get_value(
 		const std::string &json,
 		const std::string& key,size_t &start);
 };

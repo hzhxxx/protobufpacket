@@ -1,6 +1,4 @@
 
-
-#include "addressbook.pb.h"
 #include "proto.h"
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
@@ -12,7 +10,7 @@
 #include <google/protobuf/util/type_resolver.h>
 #include <google/protobuf/util/type_resolver_util.h>
 
-#include <iostream>
+#include <zlib.h>  // adler32,crc32
 #include <sstream>
 #include <arpa/inet.h>  // htonl, ntohl
 #include <stdint.h>
@@ -21,8 +19,7 @@ using namespace std::placeholders;
 using namespace google;
 using namespace std;
 
-inline const std::string CProtobufPacket::encode(
-	const protobuf::Message& message)
+const std::string CProtobufPacket::encode(const Message& message)
 {
 	std::string result = "";
 	result.resize(HEAD_LEN);
@@ -75,6 +72,8 @@ inline const std::string CProtobufPacket::encode(
 		return result;
 	}
 
+	std::function<size_t (size_t,const Bytef*,size_t)> 
+	checksum_f = std::bind(::adler32,_1,_2,_3);	
 	if(flag_.test(CHECKSUM_ALGORITHM_INDXE))
 	{
 		checksum_f = std::bind(crc32,_1,_2,_3);
@@ -96,8 +95,7 @@ inline const std::string CProtobufPacket::encode(
 	return result;	
 }
 
-inline protobuf::Message* 
-CProtobufPacket::decode(const std::string& buf)
+protobuf::Message* CProtobufPacket::decode(const std::string& buf)
 {
   int32_t total = static_cast<int32_t>(buf.size());
   int32_t len = asInt32(buf.c_str());
@@ -108,7 +106,9 @@ CProtobufPacket::decode(const std::string& buf)
   
   //int32_t checkSum = asInt32(buf.c_str() + buf.size() - HEAD_LEN);
   int32_t checkSum = asInt32(buf.c_str() + len);
-  flag_ = asInt16(buf.c_str() + HEAD_LEN);	
+  flag_ = asInt16(buf.c_str() + HEAD_LEN);
+  std::function<size_t (size_t,const Bytef*,size_t)> 
+	checksum_f = std::bind(::adler32,_1,_2,_3);	
   if(flag_.test(CHECKSUM_ALGORITHM_INDXE))
   {
 	  checksum_f = std::bind(crc32,_1,_2,_3);
@@ -129,7 +129,7 @@ CProtobufPacket::decode(const std::string& buf)
   }
   
   std::string typeName = buf.substr(HEAD_LEN + FLAG_LEN + NAME_LEN,nameLen);
-  google::protobuf::Message* message = createMessage(typeName);
+  protobuf::Message* message = createMessage(typeName);
   if(!message)
   {
 	  return nullptr;
@@ -163,15 +163,15 @@ CProtobufPacket::decode(const std::string& buf)
   return success ? message : nullptr;
 }
 
-inline google::protobuf::Message* CProtobufPacket::createMessage(const std::string& type_name)
+inline Message* CProtobufPacket::createMessage(const std::string& type_name)
 {
   google::protobuf::Message* message = nullptr;
-  const google::protobuf::Descriptor* descriptor =
-    google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(type_name);
+  const protobuf::Descriptor* descriptor =
+    protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(type_name);
   if (descriptor)
   {
-    const google::protobuf::Message* prototype =
-      google::protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
+    const protobuf::Message* prototype =
+      protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
     if (prototype)
     {
       message = prototype->New();
@@ -180,7 +180,7 @@ inline google::protobuf::Message* CProtobufPacket::createMessage(const std::stri
   return message;
 }
 
-bool CProtobufPacket::unzip(std::string &json)
+inline bool CProtobufPacket::unzip(std::string &json)
 {
 	//最大支持4倍压缩
 	uint64_t unziplen = json.size() * 4;
@@ -282,7 +282,7 @@ inline int32_t CProtobufPacket::get_check_sum()
 	return check_sum_;
 }
 
-inline const std::string CJsonPacket::encode(const protobuf::Message& message)
+const std::string CJsonPacket::encode(const Message& message)
 {		
 	CProtobufPacket packet;
 	packet.set_proto_format(true);
@@ -299,7 +299,7 @@ inline const std::string CJsonPacket::encode(const protobuf::Message& message)
 	return json.str();
 }
 
-inline protobuf::Message* CJsonPacket::decode(const std::string& json)
+protobuf::Message* CJsonPacket::decode(const std::string& json)
 {
 	size_t start = 0;
 	int32_t be32 = 0,namelen = 0;
@@ -362,74 +362,3 @@ inline const std::string CJsonPacket::get_value(
 	return "";
 }
 
-//以下部分为测试代码
-
-void addPerson(tutorial::AddressBook &address_book)
-{
-	tutorial::Person* person = address_book.add_people();
-	assert(person);
-	static int32_t id = 100;	
-	person->set_id(id++);
-	*person->mutable_name() = "huang马克黄";
-	person->set_email("888888@qq.com");
-	//
-	tutorial::Person::PhoneNumber* phone_number = person->add_phones();
-    phone_number->set_number("18912345678");
-	phone_number->set_type(tutorial::Person::MOBILE);
-
-	phone_number = person->add_phones();
-    phone_number->set_number("075512345678");
-	phone_number->set_type(tutorial::Person::WORK);	
-}
-
-void print_(const tutorial::AddressBook *book)
-{
-	for(int i = 0;i < book->people_size();++i)
-	{
-		const tutorial::Person &person = book->people(i);
-		std::cout<<"id:"<<person.id()<<endl;
-		std::cout<<"e-mail:"<<person.email()<<endl;
-		std::cout<<"name:"<<person.name()<<endl;
-		for(int k = 0;k< person.phones_size();++k)
-		{
-			const tutorial::Person_PhoneNumber &number = person.phones(k);
-			std::cout<<"number:"<<number.number()<<endl;
-			std::cout<<"number type:"<<number.type()<<endl;
-		}
-	}
-}
-
-int main(int argc,char * argv[])
-{
-	GOOGLE_PROTOBUF_VERIFY_VERSION;
-	
-	tutorial::AddressBook address_book;
-
-	addPerson(address_book);
-	addPerson(address_book);
-	//std::string protobuf = "";
-	//assert(address_book.SerializeToString(&protobuf));
-
-	CProtobufPacket packet;
-	//packet.set_proto_checksum_algorithm(true);
-	packet.set_proto_format(true);
-	//packet.set_proto_zip(true);
-	std::string buf = packet.encode(address_book);
-
-	//std::cout<<"buf"<<buf<<endl;
-	buf.append("附加测试,判定只解析需要的数据");
-	tutorial::AddressBook *book = dynamic_cast<tutorial::AddressBook*>(packet.decode(buf));  
-	print_(book);
-
-	CJsonPacket jsonpacket;
-	buf = jsonpacket.encode(address_book);
-	std::cout<<buf.size()<<","<<buf<<endl;
-	
-	book = dynamic_cast<tutorial::AddressBook*>(jsonpacket.decode(buf));
-	print_(book);		
-
-	// Optional:  Delete all global objects allocated by libprotobuf.
-  	google::protobuf::ShutdownProtobufLibrary();
-
-	return 0;
-}
