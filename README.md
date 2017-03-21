@@ -34,3 +34,19 @@ typeName+protobufData
 
 5. 支持 http(https)+json 格式,包头采用http和https协议封装,支持Json 打包和解包,类似如下格式
 {"Length":311,"Flag":2,"NameLen":21,"TypeName":"tutorial.AddressBook","PB_Data":{Json数据},"CheckSum":-2121440958}
+
+6. 如果是 java 版本,需要获取到 descriptor_set_out 文件,用于动态构造 Message
+对象,以官方例子 addressbook.proto 文件为例,生成方法如下:
+protoc --descriptor_set_out=Protobuf.desc --java_out=./ addressbook.proto
+修改类 ProtobufPacket 的私有成员 
+private String DescFileName_ = "D:\\study\\language\\java\\protobufpacket\\src\\tutorial\\Addressbook.desc";
+为自有项目中 descriptor_set_out 文件的名称即可,默认位于./src/protocol/Protobuf.desc,
+可关注 .proto内的这几项
+package protocol;
+option java_package = "protocol";
+option java_outer_classname = "Protobuf";
+
+7. 鉴于 google protobuf 目前只有部分语言(C++,java/python等)实现了 Json 和二进制对象的互转,
+对于非Json ,可以直接通过 HTTP 二进制传输,通过 Content-Type 标识,
+application/json    JSON数据格式
+application/x-protobuf    protobuf格式数据 
