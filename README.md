@@ -48,5 +48,6 @@ option java_outer_classname = "Protobuf";
 
 7. 鉴于 google protobuf 目前只有部分语言(C++,java/python等)实现了 Json 和二进制对象的互转,
 对于非Json ,可以直接通过 HTTP 二进制传输,通过 Content-Type 标识,
+    
     application/json    JSON数据格式
     application/x-protobuf    protobuf格式数据 
