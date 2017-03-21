@@ -1,4 +1,4 @@
-# protobufpacket
+#protobufpacket
 ====
 protobuf c++ 2011 packet
 ----
@@ -18,9 +18,9 @@ protobuf c++ 2011 packet
 
 1. flag 
 从最低位开始,
-第0位用作校验类型, 0: adler32(默认), 1:表示使用的是 CRC32。
-第1位用来表示BufData的protobuf编码类型，0: 二进制编码(默认),1:json编码
-第2位用来表示BufData的压缩类型，0:不压缩(默认)；1:zip压缩
+<br/>第0位用作校验类型, 0: adler32(默认), 1:表示使用的是 CRC32。
+<br/>第1位用来表示BufData的protobuf编码类型，0: 二进制编码(默认),1:json编码
+<br/>第2位用来表示BufData的压缩类型，0:不压缩(默认)；1:zip压缩
 
 2. checkSum
 只支持adler32和crc32校验和,校验内容按顺序包括 flag+namelen+
@@ -49,6 +49,5 @@ typeName+protobufData
 <br/>option java_outer_classname = "Protobuf";
 
 7. 鉴于 google protobuf 目前只有部分语言(C++,java/python等)实现了 Json 和二进制对象的互转,
-对于非Json ,可以直接通过 HTTP 二进制传输,通过 Content-Type 标识,    
-<br/>application/json    JSON数据格式
+对于非Json ,可以直接通过 HTTP 二进制传输,通过 Content-Type 标识, <br/>application/json    JSON数据格式
 <br/>application/x-protobuf    protobuf格式数据 
