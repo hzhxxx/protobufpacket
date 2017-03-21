@@ -2,10 +2,10 @@
 
 syntax = "proto3";
 
-package tutorial;
+package protocol;
 
-option java_package = "com.example.tutorial";
-option java_outer_classname = "AddressBookProtos";
+option java_package = "protocol";
+option java_outer_classname = "Protobuf";
 option csharp_namespace = "Google.Protobuf.Examples.AddressBook";
 
 message Person {
