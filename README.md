@@ -31,11 +31,11 @@ typeName+protobufData
 
 4. protobufData长度
 (len - nameLen - 8)等于下面表达式
-(len - NameLen - sizeof(Flag) - sizeof(NameLen) - sizeof(CheckSum))
+<br/>(len - NameLen - sizeof(Flag) - sizeof(NameLen) - sizeof(CheckSum))
 装载  protobuf 数据（类)通过序列化后的的实例。
 
 5. 支持 http(https)+json 格式,包头采用http和https协议封装,支持Json 打包和解包,类似如下格式
-{"Length":311,"Flag":2,"NameLen":21,"TypeName":"tutorial.AddressBook","PB_Data":{Json数据},"CheckSum":-2121440958}
+<br/>{"Length":311,"Flag":2,"NameLen":21,"TypeName":"tutorial.AddressBook","PB_Data":{Json数据},"CheckSum":-2121440958}
 
 6. 如果是 java 版本,需要获取到 descriptor_set_out 文件,用于动态构造 Message
 对象,以官方例子 addressbook.proto 文件为例,生成方法如下:
