@@ -24,14 +24,14 @@ const std::string CProtobufPacket::encode(const Message& message)
 	std::string result = "";
 	result.resize(HEAD_LEN);
 	
-	//设置 flag
-	int16_t be16 = ::htons(flag_.to_ulong());
+	//设置 flag	
+	int16_t be16 = htons(flag_.to_ulong());
 	result.append(reinterpret_cast<char*>(&be16),sizeof(int16_t));
 
 	//设置 nameLen和typeName(\0结尾)
 	typeName_ = message.GetTypeName();	
 	typeName_length_ = static_cast<int16_t>(typeName_.size() + 1);
-	be16 = ::htons(typeName_length_);
+	be16 = htons(typeName_length_);
 	result.append(reinterpret_cast<char*>(&be16),sizeof(int16_t));
 	result.append(typeName_.c_str(), typeName_length_);
 	bool success = true;
@@ -182,8 +182,8 @@ inline Message* CProtobufPacket::createMessage(const std::string& type_name)
 
 inline bool CProtobufPacket::unzip(std::string &json)
 {
-	//最大支持4倍压缩
-	uint64_t unziplen = json.size() * 4;
+	//最大支持8倍压缩
+	uint64_t unziplen = json.size() * 8;
 	shared_ptr<Bytef> unzip(new Bytef[unziplen + 1]);		  
 	int err = uncompress(unzip.get(),&unziplen,(const Bytef *)json.c_str(),json.size());
 	if(err == Z_OK)
@@ -222,32 +222,32 @@ inline int16_t CProtobufPacket::asInt16(const char* buf)
 	return (ch1 << 8) + (ch2 << 0); 
 }
 
-inline void CProtobufPacket::set_proto_checksum_algorithm(bool adler32)
+void CProtobufPacket::set_proto_checksum_algorithm(bool adler32)
 {
 	flag_[CHECKSUM_ALGORITHM_INDXE] = adler32 ? 0 : 1;
 }
 
-inline bool CProtobufPacket::get_proto_checksum_algorithm()
+bool CProtobufPacket::get_proto_checksum_algorithm()
 {
 	return flag_.test(CHECKSUM_ALGORITHM_INDXE);
 }
 
-inline void CProtobufPacket::set_proto_format(bool json)
+void CProtobufPacket::set_proto_format(bool json)
 {
 	flag_[PROTO_FORMAT_INDXE] = json ? 1 : 0;
 }
 
-inline bool CProtobufPacket::get_proto_format()
+bool CProtobufPacket::get_proto_format()
 {
 	return flag_.test(PROTO_FORMAT_INDXE);
 }
 
-inline void CProtobufPacket::set_proto_zip(bool zip)
+void CProtobufPacket::set_proto_zip(bool zip)
 {
 	flag_[PROTO_ZIP_INDXE] = zip ? 1 : 0;
 }
 
-inline bool CProtobufPacket::get_proto_zip()
+bool CProtobufPacket::get_proto_zip()
 {
 	return flag_.test(PROTO_ZIP_INDXE);
 }
