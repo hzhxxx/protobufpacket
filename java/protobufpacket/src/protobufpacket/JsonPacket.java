@@ -17,12 +17,12 @@ public class JsonPacket {
 
 		StringBuilder json = new StringBuilder();
 		json.append("{");
-		json.append(LENGTH + ":").append(packet.get_packet_length()).append(",");
-		json.append(FLAG + ":").append(packet.get_packet_flag()).append(",");
-		json.append(NAMELEN + ":").append(packet.get_packet_typeName_length()).append(",");
-		json.append(TYPENAME).append(":\"").append(packet.get_packet_typeName()).append("\",");
-		json.append(PB_DATA + ":").append(packet.get_json_message()).append(",");
-		json.append(CHECKSUM + ":").append(packet.get_check_sum());
+		json.append("\"" + LENGTH + "\":").append(packet.get_packet_length()).append(",");
+		json.append("\"" + FLAG + "\":").append(packet.get_packet_flag()).append(",");
+		json.append("\"" + NAMELEN + "\":").append(packet.get_packet_typeName_length()).append(",");
+		json.append("\"" + TYPENAME).append("\":\"").append(packet.get_packet_typeName()).append("\",");
+		json.append("\"" + PB_DATA + "\":").append(packet.get_json_message()).append(",");
+		json.append("\"" + CHECKSUM + "\":").append(packet.get_check_sum());
 		json.append("}");
 
 		return json.substring(0);
@@ -37,8 +37,8 @@ public class JsonPacket {
 
 			int start = jsondata.indexOf(PB_DATA);
 			int end = jsondata.lastIndexOf(CHECKSUM);
-			String pb_data = jsondata.substring(start + PB_DATA.length() + 1, end - 1);
-
+			final String OPER_1 = ",\"", OPER_2 = "\":";
+			String pb_data = jsondata.substring(start + PB_DATA.length() + OPER_2.length(), end - OPER_1.length());
 			ByteBuffer databuf = ByteBuffer.allocate(length + Integer.SIZE / 8);
 			// 使用网络字节序
 			databuf.order(java.nio.ByteOrder.BIG_ENDIAN);

@@ -1,5 +1,7 @@
 
 //g++ -g test.cpp proto.cpp addressbook.pb.cc -lprotobuf -lz -std=gnu++11 -o proto -Wl,-rpath,/usr/local/lib -I/usr/local/include/
+//g++ -rdynamic -std=gnu++11 -fPIC -g test.cpp proto.cpp addressbook.pb.cc -I/usr/local/include/ -Wl,-rpath,/usr/local/lib -Wl,-Bdynamic -lz -Wl,-Bstatic -lprotobuf -Wl,-Bdynamic -o proto
+//g++ -rdynamic -std=gnu++11 -fPIC -O3 test.cpp proto.cpp addressbook.pb.cc -I/usr/local/include/ -Wl,-rpath,/usr/local/lib -Wl,-Bdynamic -lz -Wl,-Bstatic -lprotobuf -Wl,-Bdynamic -o proto
 
 #include "addressbook.pb.h"
 #include "proto.h"
@@ -48,7 +50,7 @@ int main(int argc,char * argv[])
 	
 	protocol::AddressBook address_book;
 
-	for(int i = 0;i< 10;++i)
+	for(int i = 0;i< 5;++i)
 	{
 		addPerson(address_book);
 		//addPerson(address_book);
@@ -57,9 +59,9 @@ int main(int argc,char * argv[])
 	//assert(address_book.SerializeToString(&protobuf));
 
 	CProtobufPacket packet;
-	//packet.set_proto_checksum_algorithm(true);
+	packet.set_proto_checksum_algorithm(true);
 	packet.set_proto_format(true);
-	//packet.set_proto_zip(true);
+	packet.set_proto_zip(true);
 	std::string buf = packet.encode(address_book);
 
 	//std::cout<<"buf"<<buf<<endl;
@@ -68,11 +70,13 @@ int main(int argc,char * argv[])
 	print_(book);
 
 	CJsonPacket jsonpacket;
-	buf = jsonpacket.encode(address_book);
-	std::cout<<buf.size()<<","<<buf<<endl;
+	buf = jsonpacket.encode(*book);
+	std::cout<<buf.size()<<endl;
+	std::cout<<buf<<endl;
 	
 	book = dynamic_cast<protocol::AddressBook*>(jsonpacket.decode(buf));
-	print_(book);		
+	//print_(book);	
+	delete book;	
 
 	// Optional:  Delete all global objects allocated by libprotobuf.
   	google::protobuf::ShutdownProtobufLibrary();

@@ -289,7 +289,7 @@ public final class ProtobufPacket {
 				for (FileDescriptorProto descproto : descriptorSet.getFileList()) {
 					FileDescriptor fd = FileDescriptor.buildFrom(descproto, new FileDescriptor[] {});
 					for (Descriptor descriptor : fd.getMessageTypes()) {
-						System.out.println(descriptor.getFullName());
+						//System.out.println(descriptor.getFullName());
 						descriptors_.put(descriptor.getFullName(), descriptor);
 					}
 				}

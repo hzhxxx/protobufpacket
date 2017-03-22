@@ -7,7 +7,7 @@ import protocol.Protobuf.AddressBook;
 import protocol.Protobuf.Person.PhoneNumber;
 
 public class Test {
-	private static int id = 0;
+	private static int id = 100;
 
 	static public AddressBook addPerson(AddressBook.Builder address_book) {
 		Person.Builder person = Person.newBuilder();
@@ -42,9 +42,12 @@ public class Test {
 	}
 
 	public static void main(String[] args) {
+		
+		//long t1 = System.currentTimeMillis();
+		
 		AddressBook.Builder build = AddressBook.newBuilder();
-		AddressBook book = addPerson(build);
-		for (int i = 0; i < 100; ++i) {
+		AddressBook book = null;
+		for (int i = 0; i < 5; ++i) {
 			book = addPerson(build);
 		}
 
@@ -53,13 +56,13 @@ public class Test {
 		packet.set_proto_format(true);
 		packet.set_proto_zip(true);
 
-		System.out.println("初始化构造:");
-		print_(book);
+		//System.out.println("初始化构造:");
+		//print_(book);
 
 		byte[] protobuf = null;
 		try {
 			protobuf = packet.encode(book);
-			System.out.println(protobuf.length);
+			//System.out.println(protobuf.length);
 			String TESTBUFF = "附加测试,判定只解析需要的数据";
 			ByteBuffer buff = ByteBuffer.allocate(protobuf.length + TESTBUFF.getBytes().length);
 			buff.put(protobuf);
@@ -67,7 +70,7 @@ public class Test {
 			protobuf = buff.array();
 			protobuf = packet.decode(protobuf);
 			book = AddressBook.parseFrom(protobuf);
-			System.out.println("序列化后构造:");
+			//System.out.println("序列化后构造:");
 			print_(book);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -75,15 +78,18 @@ public class Test {
 
 		try {
 			JsonPacket json = new JsonPacket();
-			System.out.println("Json序列化:");
+			//System.out.println("Json序列化:");
 			String jsonprotobuf = json.encode(book);
+			System.out.println(jsonprotobuf.length());
 			System.out.println(jsonprotobuf);
-			System.out.println("Json反序列化:");
+			//System.out.println("Json反序列化:");
 			protobuf = json.decode(jsonprotobuf);
 			book = AddressBook.parseFrom(protobuf);
-			print_(book);
+			//print_(book);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
+		
+		//System.out.println(System.currentTimeMillis() - t1);
+	}	
 }
