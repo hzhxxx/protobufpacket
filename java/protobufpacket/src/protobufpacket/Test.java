@@ -6,11 +6,11 @@ import protocol.Protobuf.*;
 import protocol.Protobuf.AddressBook;
 import protocol.Protobuf.Person.PhoneNumber;
 
-
 public class Test {
 	private static int id = 0;
+
 	static public AddressBook addPerson(AddressBook.Builder address_book) {
-		Person.Builder person = Person.newBuilder();		
+		Person.Builder person = Person.newBuilder();
 		person.setId(id++);
 		person.setName("huang马克黄");
 		person.setEmail("888888@qq.com");
@@ -41,11 +41,10 @@ public class Test {
 		}
 	}
 
-	public static void main(String[] args) {		
+	public static void main(String[] args) {
 		AddressBook.Builder build = AddressBook.newBuilder();
 		AddressBook book = addPerson(build);
-		for(int i = 0;i< 100;++i)
-		{
+		for (int i = 0; i < 100; ++i) {
 			book = addPerson(build);
 		}
 
@@ -72,20 +71,19 @@ public class Test {
 			print_(book);
 		} catch (IOException e) {
 			e.printStackTrace();
-		}				
-		
+		}
+
 		try {
 			JsonPacket json = new JsonPacket();
 			System.out.println("Json序列化:");
 			String jsonprotobuf = json.encode(book);
 			System.out.println(jsonprotobuf);
 			System.out.println("Json反序列化:");
-			protobuf = json.decode(jsonprotobuf);			
+			protobuf = json.decode(jsonprotobuf);
 			book = AddressBook.parseFrom(protobuf);
 			print_(book);
-		} catch (IOException e) {			
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 	}
 }

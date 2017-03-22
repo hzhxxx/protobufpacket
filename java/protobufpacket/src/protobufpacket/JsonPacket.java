@@ -30,33 +30,33 @@ public class JsonPacket {
 
 	public byte[] decode(String jsondata) throws IOException {
 		byte[] protobuf = null;
-		JsonParser parse =new JsonParser();		
-		 try {
-	            JsonObject json=(JsonObject) parse.parse(jsondata);
-	            int length = json.get(LENGTH).getAsInt();
-	            
-	            int start = jsondata.indexOf(PB_DATA);
-	            int end = jsondata.lastIndexOf(CHECKSUM);
-	            String pb_data = jsondata.substring(start + PB_DATA.length() + 1, end - 1);	            
+		JsonParser parse = new JsonParser();
+		try {
+			JsonObject json = (JsonObject) parse.parse(jsondata);
+			int length = json.get(LENGTH).getAsInt();
 
-	    		ByteBuffer databuf = ByteBuffer.allocate(length + Integer.SIZE / 8);
-	    		// 使用网络字节序
-	    		databuf.order(java.nio.ByteOrder.BIG_ENDIAN);
-	    		databuf.putInt(length);
-	    		databuf.putShort(json.get(FLAG).getAsShort());
-	    		databuf.putShort(json.get(NAMELEN).getAsShort());
-	    		databuf.put(json.get(TYPENAME).getAsString().getBytes());
-	    		databuf.put((byte) '\0');
-	    		databuf.put(pb_data.getBytes());
-	    		databuf.putInt(json.get(CHECKSUM).getAsInt());
-	            
-	            ProtobufPacket packet = new ProtobufPacket();	            
-	            protobuf = packet.decode(databuf.array());	            
-	        } catch (JsonIOException e) {
-	            e.printStackTrace();
-	        } catch (JsonSyntaxException e) {
-	            e.printStackTrace();
-	        }
+			int start = jsondata.indexOf(PB_DATA);
+			int end = jsondata.lastIndexOf(CHECKSUM);
+			String pb_data = jsondata.substring(start + PB_DATA.length() + 1, end - 1);
+
+			ByteBuffer databuf = ByteBuffer.allocate(length + Integer.SIZE / 8);
+			// 使用网络字节序
+			databuf.order(java.nio.ByteOrder.BIG_ENDIAN);
+			databuf.putInt(length);
+			databuf.putShort(json.get(FLAG).getAsShort());
+			databuf.putShort(json.get(NAMELEN).getAsShort());
+			databuf.put(json.get(TYPENAME).getAsString().getBytes());
+			databuf.put((byte) '\0');
+			databuf.put(pb_data.getBytes());
+			databuf.putInt(json.get(CHECKSUM).getAsInt());
+
+			ProtobufPacket packet = new ProtobufPacket();
+			protobuf = packet.decode(databuf.array());
+		} catch (JsonIOException e) {
+			e.printStackTrace();
+		} catch (JsonSyntaxException e) {
+			e.printStackTrace();
+		}
 		return protobuf;
 	}
 
@@ -67,4 +67,3 @@ public class JsonPacket {
 	private String PB_DATA = "PB_Data";
 	private String CHECKSUM = "CheckSum";
 }
-

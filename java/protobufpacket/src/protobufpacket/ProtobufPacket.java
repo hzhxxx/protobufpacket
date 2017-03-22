@@ -117,7 +117,7 @@ public final class ProtobufPacket {
 			CRC32 crc32 = new CRC32();
 			crc32.update(checkbuf.array());
 			check_sum_ = (int) crc32.getValue();
-		} else {		
+		} else {
 			Adler32 adler32 = new Adler32();
 			adler32.update(checkbuf.array());
 			check_sum_ = (int) adler32.getValue();
@@ -145,7 +145,7 @@ public final class ProtobufPacket {
 		check_sum_ = result.getInt(len);
 		short flag = result.getShort(HEAD_LEN);
 		for (int i = 0; i < flag_.size(); ++i) {
-			flag_.set(i, (flag >> (i) & 1) == 1 ? true:false);
+			flag_.set(i, (flag >> (i) & 1) == 1 ? true : false);
 		}
 		int compute_checkSum = 0;
 		packet_length_ = len - CHECKSUM_LEN;
@@ -170,25 +170,25 @@ public final class ProtobufPacket {
 		if (nameLen < 2 || nameLen > len - 2 * HEAD_LEN) {
 			return null;
 		}
-		
+
 		byte[] Name = new byte[nameLen - 1];
 		result.position(HEAD_LEN + FLAG_LEN + NAME_LEN);
 		result.get(Name, 0, nameLen - 1);
-		typeName_ = new String(Name);		
+		typeName_ = new String(Name);
 		int dataLen = len - FLAG_LEN - NAME_LEN - CHECKSUM_LEN - nameLen;
 		byte[] data = new byte[dataLen];
 		result.position(HEAD_LEN + FLAG_LEN + NAME_LEN + nameLen);
 		result.get(data, 0, dataLen);
 		boolean success = true;
-		if (flag_.get(PROTO_FORMAT_INDXE)) {			
+		if (flag_.get(PROTO_FORMAT_INDXE)) {
 			String json = new String(data);
 			if (flag_.get(PROTO_ZIP_INDXE)) {
 				json = unzip(data);
 			}
 			Message.Builder builder = createMessage(typeName_);
 			JsonFormat.parser().merge(json, builder);
-			data = builder.build().toByteArray();			
-		} 
+			data = builder.build().toByteArray();
+		}
 		packet_length_ = len;
 		return success ? data : null;
 	}
@@ -271,7 +271,7 @@ public final class ProtobufPacket {
 	private Message.Builder createMessage(String type_name) {
 		BuildDescriptor();
 		Descriptor desc = descriptors_.get(type_name);
-		Builder builder = DynamicMessage.newBuilder(desc);	
+		Builder builder = DynamicMessage.newBuilder(desc);
 		return builder;
 	}
 
@@ -282,28 +282,34 @@ public final class ProtobufPacket {
 		}
 
 		try {
-			try {				
-				FileInputStream fs = new FileInputStream(DescFileName_);
+			FileInputStream fs = null;
+			try {
+				fs = new FileInputStream(DescFileName_);
 				FileDescriptorSet descriptorSet = FileDescriptorSet.parseFrom(fs);
 				for (FileDescriptorProto descproto : descriptorSet.getFileList()) {
 					FileDescriptor fd = FileDescriptor.buildFrom(descproto, new FileDescriptor[] {});
 					for (Descriptor descriptor : fd.getMessageTypes()) {
-							System.out.println(descriptor.getFullName());
-							descriptors_.put(descriptor.getFullName(), descriptor);
+						System.out.println(descriptor.getFullName());
+						descriptors_.put(descriptor.getFullName(), descriptor);
 					}
 				}
 			} catch (IOException e) {
-				System.out.println(e.toString());
+				e.printStackTrace();
+			} finally {
+				if (fs != null) {
+					fs.close();
+				}
 			}
 		} catch (Exception e) {
-			System.out.println(e.toString());
+			e.printStackTrace();
 		}
 	}
 
-	private String unzip(byte[] json) {
+	private String unzip(byte[] json) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		ByteArrayInputStream in = new ByteArrayInputStream(json);
 		ZipInputStream zin = new ZipInputStream(in);
+		boolean result = true;
 		try {
 			while (zin.getNextEntry() != null) {
 				byte[] buffer = new byte[1024];
@@ -313,23 +319,19 @@ public final class ProtobufPacket {
 				}
 			}
 		} catch (IOException e) {
-			//
+			result = false;
+			e.printStackTrace();			
 		} finally {
-			try {
-				if (zin != null) {
-					zin.close();
-				}
-				if (in != null) {
-					in.close();
-				}
-				if (out != null) {
-					out.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (zin != null) {
+				zin.close();
+			}
+			if (in != null) {
+				in.close();
+			}
+			if (out != null) {
+				out.close();
 			}
 		}
-		return out.toString();
+		return result ? out.toString() : null;
 	}
 }
-
