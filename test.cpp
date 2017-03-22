@@ -71,6 +71,7 @@ int main(int argc,char * argv[])
 
 	CJsonPacket jsonpacket;
 	buf = jsonpacket.encode(*book);
+        delete book;
 	std::cout<<buf.size()<<endl;
 	std::cout<<buf<<endl;
 	
