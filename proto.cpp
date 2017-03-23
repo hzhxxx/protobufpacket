@@ -53,6 +53,10 @@ const std::string CProtobufPacket::encode(const Message& message)
 			}
 			else
 			{
+				//增加压缩率标志,便于解压分配内存
+				uint32_t ratio = json_message_.size()/ziplen;
+				ratio = htonl(ratio);
+				result.append((char*)(&ratio),sizeof(uint32_t));
 				result.append((char*)zip.get(),ziplen);
 			}			
 		}
@@ -182,14 +186,18 @@ inline Message* CProtobufPacket::createMessage(const std::string& type_name)
 
 inline bool CProtobufPacket::unzip(std::string &json)
 {
-	//最大支持8倍压缩
-	uint64_t unziplen = json.size() * 8;
-	shared_ptr<Bytef> unzip(new Bytef[unziplen + 1]);		  
-	int err = uncompress(unzip.get(),&unziplen,(const Bytef *)json.c_str(),json.size());
+	//解析出压缩率
+	uint64_t unziplen = asInt32(json.c_str());	
+	unziplen = (unziplen + 1) * json.size() + 1;	
+	shared_ptr<Bytef> unzip(new Bytef[unziplen]);
+	int err = uncompress(unzip.get(),&unziplen,
+	(const Bytef *)json.c_str() + sizeof(uint32_t),
+	json.size() -  sizeof(uint32_t));
 	if(err == Z_OK)
 	{
 		json.clear();
 		json.resize(unziplen);
+		unzip.get()[unziplen] = '\0';
 		std::copy((const char *)unzip.get(),
 		(const char *)unzip.get() + unziplen,json.begin());		
 	}	

@@ -6,6 +6,7 @@
 #include "addressbook.pb.h"
 #include "proto.h"
 #include <iostream>
+#include <sys/time.h>
 using namespace std;
 
 //以下部分为测试代码
@@ -48,9 +49,11 @@ int main(int argc,char * argv[])
 {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	
+	struct timeval tv1,tv2,tv_start;
+	gettimeofday(&tv1,0);
+	tv_start = tv1;
 	protocol::AddressBook address_book;
-
-	for(int i = 0;i< 5;++i)
+	for(int i = 0;i< 6000;++i)
 	{
 		addPerson(address_book);
 		//addPerson(address_book);
@@ -63,24 +66,41 @@ int main(int argc,char * argv[])
 	packet.set_proto_format(true);
 	packet.set_proto_zip(true);
 	std::string buf = packet.encode(address_book);
+	gettimeofday(&tv2,0);
+	int times = 0;
+	times = ((tv2.tv_sec  - tv1.tv_sec) * 1000000 + (tv2.tv_usec - tv1.tv_usec))/1000;
+	std::cout<<"encode time:"<<times<<endl;
 
 	//std::cout<<"buf"<<buf<<endl;
 	buf.append("附加测试,判定只解析需要的数据");
-	protocol::AddressBook *book = dynamic_cast<protocol::AddressBook*>(packet.decode(buf));  
-	print_(book);
+	protocol::AddressBook *book = dynamic_cast<protocol::AddressBook*>(packet.decode(buf));
+	gettimeofday(&tv1,0);
+	times = ((tv1.tv_sec  - tv2.tv_sec) * 1000000 + (tv1.tv_usec - tv2.tv_usec))/1000;
+	std::cout<<"decode time:"<<times<<endl;
+	//print_(book);
 
 	CJsonPacket jsonpacket;
 	buf = jsonpacket.encode(*book);
-        delete book;
+	gettimeofday(&tv2,0);
+	times = ((tv2.tv_sec  - tv1.tv_sec) * 1000000 + (tv2.tv_usec - tv1.tv_usec))/1000;
+	std::cout<<"json encode time:"<<times<<endl;
+    delete book;
 	std::cout<<buf.size()<<endl;
-	std::cout<<buf<<endl;
+	//std::cout<<buf<<endl;
 	
 	book = dynamic_cast<protocol::AddressBook*>(jsonpacket.decode(buf));
+	gettimeofday(&tv1,0);
+	times = ((tv1.tv_sec  - tv2.tv_sec) * 1000000 + (tv1.tv_usec - tv2.tv_usec))/1000;
+	std::cout<<"json decode time:"<<times<<endl;
+
 	//print_(book);	
 	delete book;	
 
 	// Optional:  Delete all global objects allocated by libprotobuf.
   	google::protobuf::ShutdownProtobufLibrary();
+
+	times = ((tv1.tv_sec  - tv_start.tv_sec) * 1000000 + (tv1.tv_usec - tv_start.tv_usec))/1000;
+	std::cout<<"all time:"<<times<<endl;
 
 	return 0;
 }
