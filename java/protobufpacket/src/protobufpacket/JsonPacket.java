@@ -2,6 +2,7 @@ package protobufpacket;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.zip.DataFormatException;
 
 import com.google.protobuf.*;
 import com.google.gson.JsonIOException;
@@ -28,7 +29,7 @@ public class JsonPacket {
 		return json.substring(0);
 	}
 
-	public byte[] decode(String jsondata) throws IOException {
+	public byte[] decode(String jsondata) throws IOException, DataFormatException {
 		byte[] protobuf = null;
 		JsonParser parse = new JsonParser();
 		try {

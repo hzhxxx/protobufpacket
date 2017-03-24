@@ -14,9 +14,9 @@ void addPerson(protocol::AddressBook &address_book)
 {
 	protocol::Person* person = address_book.add_people();
 	assert(person);
-	static int32_t id = 100;	
+	static int32_t id = 100;
 	person->set_id(id++);
-	*person->mutable_name() = "huang马克黄";
+	*person->mutable_name() = "huang";
 	person->set_email("888888@qq.com");
 	//
 	protocol::Person::PhoneNumber* phone_number = person->add_phones();
@@ -53,7 +53,7 @@ int main(int argc,char * argv[])
 	gettimeofday(&tv1,0);
 	tv_start = tv1;
 	protocol::AddressBook address_book;
-	for(int i = 0;i< 6000;++i)
+	for(int i = 0;i< 600;++i)
 	{
 		addPerson(address_book);
 		//addPerson(address_book);
@@ -71,7 +71,7 @@ int main(int argc,char * argv[])
 	times = ((tv2.tv_sec  - tv1.tv_sec) * 1000000 + (tv2.tv_usec - tv1.tv_usec))/1000;
 	std::cout<<"encode time:"<<times<<endl;
 
-	//std::cout<<"buf"<<buf<<endl;
+	std::cout<<"buf size:"<<buf.size()<<endl;
 	buf.append("附加测试,判定只解析需要的数据");
 	protocol::AddressBook *book = dynamic_cast<protocol::AddressBook*>(packet.decode(buf));
 	gettimeofday(&tv1,0);

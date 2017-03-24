@@ -43,7 +43,6 @@ application/x-protobuf    protobuf格式数据
 
 package protobufpacket;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -75,29 +74,30 @@ public final class ProtobufPacket {
 		}
 		typeName_length_ = (short) (typeName_.length() + 1);
 
-		// 设置 protobufData
-		short ratio = -1;
+		// 设置 protobufData		
 		byte[] ProtobufData = null;	
 		if (flag_.get(PROTO_FORMAT_INDXE)) {
 			json_message_ = JsonFormat.printer().omittingInsignificantWhitespace().print(message);
-			if (flag_.get(PROTO_ZIP_INDXE)) {
-				ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				ZipOutputStream zip = null;
-				zip = new ZipOutputStream(bos);
-				ZipEntry entry = new ZipEntry("zip");
-				entry.setSize(json_message_.getBytes().length);
-				zip.putNextEntry(entry);
-				zip.write(json_message_.getBytes());
-				zip.closeEntry();
-				zip.close();
-				ByteBuffer buf = ByteBuffer.allocate(ZIP_RATIO_SIZE + bos.toByteArray().length);
+			if (flag_.get(PROTO_ZIP_INDXE)) {				
+				Deflater compresser = new Deflater();				  
+		        compresser.reset();  
+		        compresser.setInput(json_message_.getBytes());  
+		        compresser.finish();
+				ByteArrayOutputStream bos = new ByteArrayOutputStream(json_message_.getBytes().length);
+				byte[] zipbuff = new byte[2048];
+		        while (!compresser.finished()) {		        	  
+	                 int i = compresser.deflate(zipbuff);  
+	                 bos.write(zipbuff, 0, i);
+	            }
+		        compresser.end();		        
+		        ByteBuffer buf = ByteBuffer.allocate(ZIP_RATIO_SIZE + bos.toByteArray().length);
 				buf.order(java.nio.ByteOrder.BIG_ENDIAN);
 				//增加压缩率标志
-				ratio = (short) (json_message_.length()/bos.toByteArray().length);
+				short ratio = (short) (json_message_.length()/bos.toByteArray().length);
 				buf.putShort(ratio);
 				buf.put(bos.toByteArray());
-				ProtobufData = buf.array();
-				bos.close();				
+				bos.close();		
+				ProtobufData = buf.array();				
 			} else {
 				ProtobufData = json_message_.getBytes();
 			}
@@ -141,7 +141,7 @@ public final class ProtobufPacket {
 		return result.array();
 	}
 
-	public byte[] decode(byte[] buf) throws IOException {
+	public byte[] decode(byte[] buf) throws IOException, DataFormatException {
 		ByteBuffer result = ByteBuffer.allocate(buf.length);
 		result.put(buf);
 		int len = result.getInt(0);
@@ -191,8 +191,8 @@ public final class ProtobufPacket {
 				//减去压缩率标志				
 				data = new byte[dataLen - ZIP_RATIO_SIZE];
 				result.position(HEAD_LEN + FLAG_LEN + NAME_LEN + nameLen + ZIP_RATIO_SIZE);
-				result.get(data, 0, dataLen - ZIP_RATIO_SIZE);
-				json = unzip(data);
+				result.get(data, 0, dataLen - ZIP_RATIO_SIZE);		
+				json = unzip(data);			
 			}
 			else
 			{
@@ -327,34 +327,20 @@ public final class ProtobufPacket {
 			e.printStackTrace();
 		}
 	}
-
-	private String unzip(byte[] json) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();		
-		ByteArrayInputStream in = new ByteArrayInputStream(json);
-		ZipInputStream zin = new ZipInputStream(in);
-		boolean result = true;
-		try {
-			while (zin.getNextEntry() != null) {
-				byte[] buffer = new byte[1024];
-				int offset = -1;
-				while ((offset = zin.read(buffer)) != -1) {
-					out.write(buffer, 0, offset);
-				}
-			}
-		} catch (IOException e) {
-			result = false;
-			e.printStackTrace();			
-		} finally {
-			if (zin != null) {
-				zin.close();
-			}
-			if (in != null) {
-				in.close();
-			}
-			if (out != null) {
-				out.close();
-			}
-		}
-		return result ? out.toString() : null;
+	
+	private String unzip(byte[] json) throws IOException, DataFormatException {
+		Inflater decompresser = new Inflater();  
+        decompresser.reset();  
+        decompresser.setInput(json);  
+        ByteArrayOutputStream out = new ByteArrayOutputStream(json.length);
+        byte[] buf = new byte[2048];  
+        while (!decompresser.finished()) {  
+            int i = decompresser.inflate(buf);
+            out.write(buf, 0, i); 
+        }
+        decompresser.end();        
+        String s = out.toString();
+        out.close();
+        return s;
 	}
 }

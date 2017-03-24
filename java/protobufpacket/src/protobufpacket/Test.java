@@ -2,6 +2,8 @@ package protobufpacket;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.zip.DataFormatException;
+
 import protocol.Protobuf.*;
 import protocol.Protobuf.AddressBook;
 import protocol.Protobuf.Person.PhoneNumber;
@@ -12,7 +14,7 @@ public class Test {
 	static public AddressBook addPerson(AddressBook.Builder address_book) {
 		Person.Builder person = Person.newBuilder();
 		person.setId(id++);
-		person.setName("huang马克黄");
+		person.setName("huang");
 		person.setEmail("888888@qq.com");
 
 		PhoneNumber.Builder phone_number = person.addPhonesBuilder();
@@ -47,7 +49,7 @@ public class Test {
 		
 		AddressBook.Builder build = AddressBook.newBuilder();
 		AddressBook book = null;
-		for (int i = 0; i < 5000; ++i) {
+		for (int i = 0; i < 600; ++i) {
 			book = addPerson(build);
 		}
 
@@ -62,7 +64,7 @@ public class Test {
 		byte[] protobuf = null;
 		try {
 			protobuf = packet.encode(book);
-			//System.out.println(protobuf.length);
+			System.out.println("protobuf:" + protobuf.length);
 			String TESTBUFF = "附加测试,判定只解析需要的数据";
 			ByteBuffer buff = ByteBuffer.allocate(protobuf.length + TESTBUFF.getBytes().length);
 			buff.put(protobuf);
@@ -71,8 +73,11 @@ public class Test {
 			protobuf = packet.decode(protobuf);
 			book = AddressBook.parseFrom(protobuf);
 			//System.out.println("序列化后构造:");
-			print_(book);
-		} catch (IOException e) {
+			//print_(book);
+		}catch(DataFormatException e)
+		{
+			e.printStackTrace();
+		}catch (IOException e) {
 			e.printStackTrace();
 		}
 
@@ -86,7 +91,10 @@ public class Test {
 			protobuf = json.decode(jsonprotobuf);
 			book = AddressBook.parseFrom(protobuf);
 			//print_(book);
-		} catch (IOException e) {
+		}catch(DataFormatException e)
+		{
+			e.printStackTrace();
+		}catch (IOException e) {
 			e.printStackTrace();
 		}
 		
