@@ -47,7 +47,7 @@ public class Test {
 		
 		AddressBook.Builder build = AddressBook.newBuilder();
 		AddressBook book = null;
-		for (int i = 0; i < 5; ++i) {
+		for (int i = 0; i < 5000; ++i) {
 			book = addPerson(build);
 		}
 

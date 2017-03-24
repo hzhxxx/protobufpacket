@@ -76,7 +76,8 @@ public final class ProtobufPacket {
 		typeName_length_ = (short) (typeName_.length() + 1);
 
 		// 设置 protobufData
-		byte[] ProtobufData = null;
+		short ratio = -1;
+		byte[] ProtobufData = null;	
 		if (flag_.get(PROTO_FORMAT_INDXE)) {
 			json_message_ = JsonFormat.printer().omittingInsignificantWhitespace().print(message);
 			if (flag_.get(PROTO_ZIP_INDXE)) {
@@ -89,8 +90,14 @@ public final class ProtobufPacket {
 				zip.write(json_message_.getBytes());
 				zip.closeEntry();
 				zip.close();
-				ProtobufData = bos.toByteArray();
-				bos.close();
+				ByteBuffer buf = ByteBuffer.allocate(ZIP_RATIO_SIZE + bos.toByteArray().length);
+				buf.order(java.nio.ByteOrder.BIG_ENDIAN);
+				//增加压缩率标志
+				ratio = (short) (json_message_.length()/bos.toByteArray().length);
+				buf.putShort(ratio);
+				buf.put(bos.toByteArray());
+				ProtobufData = buf.array();
+				bos.close();				
 			} else {
 				ProtobufData = json_message_.getBytes();
 			}
@@ -111,7 +118,7 @@ public final class ProtobufPacket {
 		checkbuf.putShort(this.get_packet_flag());
 		checkbuf.putShort(typeName_length_);
 		checkbuf.put(typeName_.getBytes());
-		checkbuf.put((byte) '\0');
+		checkbuf.put((byte) '\0');		
 		checkbuf.put(ProtobufData);
 		if (flag_.get(CHECKSUM_ALGORITHM_INDXE)) {
 			CRC32 crc32 = new CRC32();
@@ -176,18 +183,33 @@ public final class ProtobufPacket {
 		result.get(Name, 0, nameLen - 1);
 		typeName_ = new String(Name);
 		int dataLen = len - FLAG_LEN - NAME_LEN - CHECKSUM_LEN - nameLen;
-		byte[] data = new byte[dataLen];
-		result.position(HEAD_LEN + FLAG_LEN + NAME_LEN + nameLen);
-		result.get(data, 0, dataLen);
+		byte[] data = null;
 		boolean success = true;
 		if (flag_.get(PROTO_FORMAT_INDXE)) {
-			String json = new String(data);
+			String json = null;			
 			if (flag_.get(PROTO_ZIP_INDXE)) {
+				//减去压缩率标志				
+				data = new byte[dataLen - ZIP_RATIO_SIZE];
+				result.position(HEAD_LEN + FLAG_LEN + NAME_LEN + nameLen + ZIP_RATIO_SIZE);
+				result.get(data, 0, dataLen - ZIP_RATIO_SIZE);
 				json = unzip(data);
+			}
+			else
+			{
+				data = new byte[dataLen];
+				result.position(HEAD_LEN + FLAG_LEN + NAME_LEN + nameLen);
+				result.get(data, 0, dataLen);
+				json =new String(data);
 			}
 			Message.Builder builder = createMessage(typeName_);
 			JsonFormat.parser().merge(json, builder);
 			data = builder.build().toByteArray();
+		}
+		else
+		{
+			data = new byte[dataLen];
+			result.position(HEAD_LEN + FLAG_LEN + NAME_LEN + nameLen);
+			result.get(data, 0, dataLen);
 		}
 		packet_length_ = len;
 		return success ? data : null;
@@ -256,7 +278,8 @@ public final class ProtobufPacket {
 	private short CHECKSUM_LEN = Integer.SIZE / 8;
 	private short CHECKSUM_ALGORITHM_INDXE = 0;
 	private short PROTO_FORMAT_INDXE = 1;
-	private short PROTO_ZIP_INDXE = 2;
+	private short PROTO_ZIP_INDXE = 2;	
+	final short ZIP_RATIO_SIZE = Short.SIZE / 8;
 	private int MIN_LENGTH = HEAD_LEN + FLAG_LEN + NAME_LEN + CHECKSUM_LEN;
 	private int packet_length_ = 0;
 	private short typeName_length_ = 0;
@@ -306,7 +329,7 @@ public final class ProtobufPacket {
 	}
 
 	private String unzip(byte[] json) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();		
 		ByteArrayInputStream in = new ByteArrayInputStream(json);
 		ZipInputStream zin = new ZipInputStream(in);
 		boolean result = true;

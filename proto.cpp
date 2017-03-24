@@ -54,9 +54,9 @@ const std::string CProtobufPacket::encode(const Message& message)
 			else
 			{
 				//增加压缩率标志,便于解压分配内存
-				uint32_t ratio = json_message_.size()/ziplen;
-				ratio = htonl(ratio);
-				result.append((char*)(&ratio),sizeof(uint32_t));
+				int16_t ratio = json_message_.size()/ziplen;
+				ratio = htons(ratio);
+				result.append((char*)(&ratio),sizeof(int16_t));
 				result.append((char*)zip.get(),ziplen);
 			}			
 		}
@@ -101,7 +101,7 @@ const std::string CProtobufPacket::encode(const Message& message)
 
 protobuf::Message* CProtobufPacket::decode(const std::string& buf)
 {
-  int32_t total = static_cast<int32_t>(buf.size());
+	int32_t total = static_cast<int32_t>(buf.size());
   int32_t len = asInt32(buf.c_str());
   if (total < MIN_LENGTH || len >= total)
   {
@@ -132,12 +132,13 @@ protobuf::Message* CProtobufPacket::decode(const std::string& buf)
 	  return nullptr;
   }
   
-  std::string typeName = buf.substr(HEAD_LEN + FLAG_LEN + NAME_LEN,nameLen);
+  std::string typeName = buf.substr(HEAD_LEN + FLAG_LEN + NAME_LEN,nameLen);  
   protobuf::Message* message = createMessage(typeName);
   if(!message)
   {
 	  return nullptr;
-  }
+  } 
+
   const char* data = buf.c_str() + HEAD_LEN + FLAG_LEN + NAME_LEN + nameLen;
   int32_t dataLen = len - FLAG_LEN - NAME_LEN - CHECKSUM_LEN - nameLen;
   bool success = false;
@@ -187,12 +188,12 @@ inline Message* CProtobufPacket::createMessage(const std::string& type_name)
 inline bool CProtobufPacket::unzip(std::string &json)
 {
 	//解析出压缩率
-	uint64_t unziplen = asInt32(json.c_str());	
+	uint64_t unziplen = asInt16(json.c_str());	
 	unziplen = (unziplen + 1) * json.size() + 1;	
 	shared_ptr<Bytef> unzip(new Bytef[unziplen]);
 	int err = uncompress(unzip.get(),&unziplen,
-	(const Bytef *)json.c_str() + sizeof(uint32_t),
-	json.size() -  sizeof(uint32_t));
+	(const Bytef *)json.c_str() + sizeof(int16_t),
+	json.size() -  sizeof(int16_t));
 	if(err == Z_OK)
 	{
 		json.clear();
@@ -346,10 +347,10 @@ protobuf::Message* CJsonPacket::decode(const std::string& json)
 		const std::string &s = json.substr(start,end - start);		
 		be32 = htonl(std::stoi(s,nullptr,0));
 		buff.append(reinterpret_cast<char*>(&be32),sizeof(int32_t));
-	}
+	}	
   	
 	CProtobufPacket packet;
-	return packet.decode(buff);
+	return packet.decode(buff);	
 }
 
 inline const std::string CJsonPacket::get_value(
