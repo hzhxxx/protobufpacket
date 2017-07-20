@@ -1,6 +1,8 @@
 1.  安装 protobuf-3.2,支持 js 版本,具体见官方网站
 https://github.com/google/protobuf/tree/master/js
 
+https://github.com/inexorabletash/text-encoding
+
 2. 使用下列命令构造  addressbook_pb.js
 protoc --js_out=import_style=commonjs,binary:. addressbook.proto
 
