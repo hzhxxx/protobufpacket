@@ -24,6 +24,8 @@ struct ProtobufTransportFormat __attribute__ ((__packed__))
 第0位用作校验类型, 0: adler32(默认), 1:表示使用的是 CRC32。
 第1位用来表示BufData的protobuf编码类型，0: 二进制编码(默认),1:json编码
 第2位用来表示BufData的压缩类型，0:不压缩(默认)；1:zip压缩
+第3位用来标识是protobufData是否是标准Protobuf对象序列化数据，0:是(默认),1:不是;
+第4位用来标识是否支持 PacketLen 长度校验，0:不支持(默认)；1:支持
 2. checkSum
 只支持adler32和crc32校验和,校验内容按顺序包括 flag+namelen+
 typeName+protobufData
@@ -102,8 +104,8 @@ private:
 	const std::string FLAG = "\"Flag\":";
 	const std::string NAMELEN = "\"NameLen\":";
 	const std::string TYPENAME = "\"TypeName\":";
-	const std::string PB_DATA = "\"PB_Data\":";
-	const std::string CHECKSUM = "\"CheckSum\":";
+	const std::string PB_DATA = "\"Data\":";
+	const std::string CHECKSUM = "\"Checksum\":";
 	 const std::string get_value(
 		const std::string &json,
 		const std::string& key,size_t &start);
